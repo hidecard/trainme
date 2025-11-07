@@ -365,7 +365,7 @@ export default function ProgressDashboard() {
                             </div>
                           </div>
                           <div className="text-xs text-slate-500">
-                            {attempt.completedAt ? new Date(attempt.completedAt).toLocaleDateString() : new Date().toLocaleDateString()}
+                            {attempt.completedAt ? new Date(attempt.completedAt).toLocaleDateString() : 'Unknown date'}
                           </div>
                         </div>
                       ))
