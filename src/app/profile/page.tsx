@@ -337,7 +337,7 @@ export default function ProfilePage() {
                             <div>
                               <h4 className="font-medium">{attempt.quizTitle || 'Quiz'}</h4>
                               <p className="text-sm text-gray-600">
-                                {attempt.completedAt.toLocaleDateString()} • {attempt.xpEarned || 0} XP earned
+                                {attempt.completedAt ? new Date(attempt.completedAt).toLocaleDateString() : 'Unknown date'} • {attempt.xpEarned || 0} XP earned
                               </p>
                             </div>
                           </div>
