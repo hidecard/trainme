@@ -48,6 +48,8 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       fetchUserProfile();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 

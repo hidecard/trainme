@@ -72,6 +72,8 @@ export default function ProgressDashboard() {
   useEffect(() => {
     if (user) {
       fetchUserData();
+    } else {
+      setLoading(false);
     }
   }, [user, refreshKey]);
 
