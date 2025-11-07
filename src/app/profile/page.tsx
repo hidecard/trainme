@@ -59,7 +59,8 @@ export default function ProfilePage() {
       // Fetch user stats
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
-        setUserStats(userDoc.data() as UserStats);
+        const userData = userDoc.data() as UserStats;
+        setUserStats(userData);
       }
 
       // Fetch recent quiz attempts
@@ -75,6 +76,16 @@ export default function ProfilePage() {
         ...doc.data(),
         completedAt: doc.data().completedAt?.toDate() || new Date()
       })) as QuizAttempt[];
+
+      // Calculate quizzes completed from attempts
+      const quizzesCompleted = attemptsData.length;
+
+      // Update user stats with calculated quizzes completed
+      setUserStats(prevStats => ({
+        ...prevStats,
+        quizzesCompleted: quizzesCompleted
+      } as UserStats));
+
       setQuizAttempts(attemptsData);
 
     } catch (error) {

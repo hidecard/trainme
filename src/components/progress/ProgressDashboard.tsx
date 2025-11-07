@@ -338,11 +338,11 @@ export default function ProgressDashboard() {
                         <div className="flex-1">
                           <div className="font-medium text-sm">Completed Quiz</div>
                           <div className="text-xs text-slate-600">
-                            Score: {attempt.score && attempt.totalQuestions ? Math.round((attempt.score / attempt.totalQuestions) * 100) : 0}% • +{(attempt.score || 0) * 10} XP
+                            Score: {attempt.score !== undefined && attempt.totalQuestions ? Math.round((attempt.score / attempt.totalQuestions) * 100) : 0}% • +{(attempt.score || 0) * 10} XP
                           </div>
                         </div>
                         <div className="text-xs text-slate-500">
-                          {attempt.completedAt ? new Date(attempt.completedAt).toLocaleDateString() : 'Invalid Date'}
+                          {attempt.completedAt ? new Date(attempt.completedAt).toLocaleDateString() : new Date().toLocaleDateString()}
                         </div>
                       </div>
                     ))

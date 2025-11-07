@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const newUser: User = {
         uid: firebaseUser.uid,
         email: firebaseUser.email,
-        displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
+        displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Anonymous',
         photoURL: firebaseUser.photoURL,
         totalXp: 0,
         level: 1,
@@ -92,6 +92,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Google Sign In
   const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
     try {
       const result = await signInWithPopup(auth, provider);
       if (result.user) {
