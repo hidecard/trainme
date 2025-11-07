@@ -67,18 +67,7 @@ export default function Home() {
   }, [features.length]);
 
   useEffect(() => {
-    if (user) {
-      fetchHomePageData();
-    } else {
-      setStats({
-        totalUsers: 0,
-        totalQuizzes: 0,
-        totalLessons: 0
-      });
-      setCategories([]);
-      setLeaderboard([]);
-      setLoading(false);
-    }
+    fetchHomePageData();
   }, [user]);
 
   const fetchHomePageData = async () => {

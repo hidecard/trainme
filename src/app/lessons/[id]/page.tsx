@@ -37,7 +37,7 @@ export default function LessonPage() {
     if (id) {
       fetchLesson();
     }
-  }, [id]);
+  }, [id, user]);
 
   const fetchLesson = async () => {
     try {

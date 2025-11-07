@@ -66,7 +66,7 @@ export default function LearningPathDetailPage() {
     if (pathId) {
       fetchPathData();
     }
-  }, [pathId]);
+  }, [pathId, user]);
 
   useEffect(() => {
     if (user && path) {

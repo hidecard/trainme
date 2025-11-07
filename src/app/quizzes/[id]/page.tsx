@@ -61,7 +61,7 @@ export default function QuizPage() {
     if (id) {
       fetchQuiz();
     }
-  }, [id]);
+  }, [id, user]);
 
   useEffect(() => {
     if (quizStarted && timeLeft !== null && timeLeft > 0) {

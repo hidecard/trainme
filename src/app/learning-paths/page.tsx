@@ -43,7 +43,7 @@ export default function LearningPathsPage() {
 
   useEffect(() => {
     fetchLearningPaths();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (user && paths.length > 0) {

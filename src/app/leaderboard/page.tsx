@@ -104,7 +104,7 @@ export default function Leaderboard() {
 
   useEffect(() => {
     fetchLeaderboardData();
-  }, [timeframe, refreshKey]);
+  }, [timeframe, refreshKey, user]);
 
   const fetchLeaderboardData = async () => {
     setLoading(true);
