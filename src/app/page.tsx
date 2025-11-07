@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { BookOpen, Trophy, Users, Zap, Star, Target, Clock, Award, LogOut, RefreshCw, Loader2 } from 'lucide-react';
+import { BookOpen, Trophy, Users, Zap, Star, Target, Clock, Award, LogOut, RefreshCw, Loader2, Menu, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
 import {
@@ -28,7 +28,7 @@ export default function Home() {
   const [categories, setCategories] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const features = [
     {
@@ -67,8 +67,12 @@ export default function Home() {
   }, [features.length]);
 
   useEffect(() => {
-    fetchHomePageData();
-  }, [refreshKey]);
+    if (user) {
+      fetchHomePageData();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const fetchHomePageData = async () => {
     setLoading(true);
@@ -139,7 +143,9 @@ export default function Home() {
               </div>
               <span className="font-bold text-xl">TrainMe</span>
             </div>
-            <div className="flex items-center space-x-4">
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-4">
               {user ? (
                 <>
                   <Button variant="ghost" onClick={() => window.location.href = '/learning-paths'}>
@@ -147,6 +153,9 @@ export default function Home() {
                   </Button>
                   <Button variant="ghost" onClick={() => window.location.href = '/progress'}>
                     Progress
+                  </Button>
+                  <Button variant="ghost" onClick={() => window.location.href = '/profile'}>
+                    Profile
                   </Button>
                   <Button variant="ghost" onClick={() => window.location.href = '/leaderboard'}>
                     Leaderboard
@@ -184,46 +193,107 @@ export default function Home() {
                 </>
               )}
             </div>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
+            </div>
           </div>
+
+          {/* Mobile Navigation */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t bg-white/95 backdrop-blur-sm">
+              <div className="px-2 pt-2 pb-3 space-y-1">
+                {user ? (
+                  <>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/learning-paths'; setMobileMenuOpen(false); }}>
+                      Learning Paths
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/progress'; setMobileMenuOpen(false); }}>
+                      Progress
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/profile'; setMobileMenuOpen(false); }}>
+                      Profile
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/leaderboard'; setMobileMenuOpen(false); }}>
+                      Leaderboard
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/quiz-demo'; setMobileMenuOpen(false); }}>
+                      Try Quiz
+                    </Button>
+                    {user.isAdmin && (
+                      <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/admin'; setMobileMenuOpen(false); }}>
+                        Admin
+                      </Button>
+                    )}
+                    <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/learning-paths'; setMobileMenuOpen(false); }}>
+                      Learning Paths
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/auth'; setMobileMenuOpen(false); }}>
+                      Sign In
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/progress'; setMobileMenuOpen(false); }}>
+                      Progress
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/leaderboard'; setMobileMenuOpen(false); }}>
+                      Leaderboard
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/quiz-demo'; setMobileMenuOpen(false); }}>
+                      Try Quiz
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 px-4">
+      <section className="relative overflow-hidden py-12 md:py-20 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center space-y-8">
+          <div className="text-center space-y-6 md:space-y-8">
             <div className="space-y-4">
-              <Badge variant="secondary" className="px-4 py-2 text-sm">
+              <Badge variant="secondary" className="px-3 md:px-4 py-2 text-xs md:text-sm">
                 🚀 Master Web Development Through Interactive Learning
               </Badge>
-              <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Learn, Practice, and
                 <br />
                 <span className="text-slate-900">Level Up Your Skills</span>
               </h1>
-              <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+              <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto px-4">
                 Transform your web development journey with interactive lessons, 
                 challenging quizzes, and a gamified learning experience that keeps you motivated.
               </p>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" onClick={() => window.location.href = '/quiz-demo'} className="px-8 py-3 text-lg">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
+              <Button size="lg" onClick={() => window.location.href = '/quiz-demo'} className="px-6 md:px-8 py-3 text-base md:text-lg">
                 Try Quiz Demo
               </Button>
-              <Button size="lg" variant="outline" onClick={() => window.location.href = '/progress'} className="px-8 py-3 text-lg">
+              <Button size="lg" variant="outline" onClick={() => window.location.href = '/progress'} className="px-6 md:px-8 py-3 text-base md:text-lg">
                 View Progress
-              </Button>
-              <Button size="lg" variant="outline" onClick={() => setRefreshKey(prev => prev + 1)} className="px-8 py-3 text-lg">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh Data
               </Button>
             </div>
 
             {/* Welcome message for logged in users */}
             {user && (
-              <div className="mt-8 p-6 bg-white rounded-lg shadow-sm">
-                <h2 className="text-2xl font-bold text-green-600 mb-2">
+              <div className="mt-6 md:mt-8 p-4 md:p-6 bg-white rounded-lg shadow-sm mx-4">
+                <h2 className="text-xl md:text-2xl font-bold text-green-600 mb-2">
                   Welcome back, {user.displayName || user.email?.split('@')[0]}! 👋
                 </h2>
                 <p className="text-slate-600">
@@ -233,43 +303,45 @@ export default function Home() {
             )}
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">
-                  {loading ? <Loader2 className="h-8 w-8 animate-spin mx-auto" /> : stats.totalUsers.toLocaleString()}
+            {user && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 md:mt-12 max-w-4xl mx-auto px-4">
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-blue-600">
+                    {loading ? <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin mx-auto" /> : stats.totalUsers.toLocaleString()}
+                  </div>
+                  <div className="text-slate-600">Active Learners</div>
                 </div>
-                <div className="text-slate-600">Active Learners</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">
-                  {loading ? <Loader2 className="h-8 w-8 animate-spin mx-auto" /> : stats.totalQuizzes}
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-green-600">
+                    {loading ? <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin mx-auto" /> : stats.totalQuizzes}
+                  </div>
+                  <div className="text-slate-600">Interactive Quizzes</div>
                 </div>
-                <div className="text-slate-600">Interactive Quizzes</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600">
-                  {loading ? <Loader2 className="h-8 w-8 animate-spin mx-auto" /> : stats.totalLessons}
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-purple-600">
+                    {loading ? <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin mx-auto" /> : stats.totalLessons}
+                  </div>
+                  <div className="text-slate-600">Quiz Attempts</div>
                 </div>
-                <div className="text-slate-600">Quiz Attempts</div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-12 md:py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
               Why Choose TrainMe?
             </h2>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
               Everything you need to master web development in one platform
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
@@ -281,10 +353,10 @@ export default function Home() {
                   onMouseEnter={() => setActiveFeature(index)}
                 >
                   <CardHeader>
-                    <div className={`w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center ${feature.color}`}>
-                      <Icon className="w-6 h-6" />
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg bg-slate-100 flex items-center justify-center ${feature.color}`}>
+                      <Icon className="w-5 h-5 md:w-6 md:h-6" />
                     </div>
-                    <CardTitle className="text-lg">{feature.title}</CardTitle>
+                    <CardTitle className="text-base md:text-lg">{feature.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <CardDescription className="text-sm">
@@ -299,39 +371,39 @@ export default function Home() {
       </section>
 
       {/* Learning Paths Section */}
-      <section className="py-20 px-4 bg-slate-50">
+      <section className="py-12 md:py-20 px-4 bg-slate-50">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
               Learning Paths
             </h2>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
               Choose your path and start your journey to becoming a web development expert
             </p>
           </div>
 
-          <div className="text-center mb-8">
-            <Button size="lg" onClick={() => window.location.href = '/learning-paths'} className="px-8 py-3 text-lg">
+          <div className="text-center mb-6 md:mb-8">
+            <Button size="lg" onClick={() => window.location.href = '/learning-paths'} className="px-6 md:px-8 py-3 text-base md:text-lg">
               Explore All Learning Paths
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {loading ? (
               <div className="col-span-full flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin" />
+                <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin" />
               </div>
             ) : categories.length > 0 ? (
               categories.slice(0, 4).map((category, index) => (
                 <Card key={index} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/learning-paths'}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <div className="text-3xl">{category.icon || '📚'}</div>
+                      <div className="text-2xl md:text-3xl">{category.icon || '📚'}</div>
                       <Badge className={category.color || 'bg-blue-100 text-blue-800'}>
                         {category.name || 'Category'}
                       </Badge>
                     </div>
-                    <CardTitle className="text-lg">{category.name}</CardTitle>
+                    <CardTitle className="text-base md:text-lg">{category.name}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
@@ -359,13 +431,13 @@ export default function Home() {
       </section>
 
       {/* Leaderboard Preview */}
-      <section className="py-20 px-4 bg-slate-50">
+      <section className="py-12 md:py-20 px-4 bg-slate-50">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
               Top Learners
             </h2>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
               See how our community is excelling in their learning journey
             </p>
           </div>
@@ -373,7 +445,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             {loading ? (
               <div className="text-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin mx-auto" />
               </div>
             ) : leaderboard.length > 0 ? (
               <div className="space-y-4">
@@ -381,7 +453,7 @@ export default function Home() {
                   <Card key={user.id} className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                        <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold ${
                           index === 0 ? 'bg-yellow-100 text-yellow-800' :
                           index === 1 ? 'bg-gray-100 text-gray-800' :
                           index === 2 ? 'bg-amber-100 text-amber-800' :
@@ -390,13 +462,13 @@ export default function Home() {
                           {index + 1}
                         </div>
                         <div>
-                          <div className="font-semibold">{user.displayName || user.email?.split('@')[0] || 'Anonymous'}</div>
-                          <div className="text-sm text-slate-600">Level {user.level || 1} • {user.streak || 0} day streak</div>
+                          <div className="font-semibold text-sm md:text-base">{user.displayName || user.email?.split('@')[0] || 'Anonymous'}</div>
+                          <div className="text-xs md:text-sm text-slate-600">Level {user.level || 1} • {user.streak || 0} day streak</div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-lg">{user.totalXp || 0} XP</div>
-                        <div className="text-sm text-slate-600">Total Experience</div>
+                        <div className="font-bold text-base md:text-lg">{user.totalXp || 0} XP</div>
+                        <div className="text-xs md:text-sm text-slate-600">Total Experience</div>
                       </div>
                     </div>
                   </Card>
@@ -417,44 +489,44 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-12 md:py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
               How It Works
             </h2>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
               Start learning in minutes with our simple 3-step process
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                <Target className="w-8 h-8 text-blue-600" />
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                <Target className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold">Choose Your Path</h3>
-              <p className="text-slate-600">
+              <h3 className="text-lg md:text-xl font-semibold">Choose Your Path</h3>
+              <p className="text-slate-600 text-sm md:text-base">
                 Select from HTML, CSS, JavaScript, or React learning paths tailored to your goals.
               </p>
             </div>
 
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                <Clock className="w-8 h-8 text-green-600" />
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <Clock className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold">Learn & Practice</h3>
-              <p className="text-slate-600">
+              <h3 className="text-lg md:text-xl font-semibold">Learn & Practice</h3>
+              <p className="text-slate-600 text-sm md:text-base">
                 Go through interactive lessons and test your knowledge with engaging quizzes.
               </p>
             </div>
 
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
-                <Award className="w-8 h-8 text-purple-600" />
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
+                <Award className="w-6 h-6 md:w-8 md:h-8 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold">Earn & Grow</h3>
-              <p className="text-slate-600">
+              <h3 className="text-lg md:text-xl font-semibold">Earn & Grow</h3>
+              <p className="text-slate-600 text-sm md:text-base">
                 Collect XP, unlock achievements, and climb the leaderboard as you master new skills.
               </p>
             </div>
@@ -463,27 +535,27 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-purple-600">
+      <section className="py-12 md:py-20 px-4 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="max-w-4xl mx-auto text-center text-white">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
             {user ? 'Continue Your Learning Journey!' : 'Ready to Start Your Learning Journey?'}
           </h2>
-          <p className="text-xl mb-8 opacity-90">
+          <p className="text-lg md:text-xl mb-6 md:mb-8 opacity-90">
             {user 
               ? 'Pick up where you left off and keep building your skills.' 
               : 'Join thousands of learners mastering web development the interactive way.'
             }
           </p>
-          <Button size="lg" variant="secondary" className="px-8 py-3 text-lg" onClick={() => window.location.href = user ? '/progress' : '/auth'}>
+          <Button size="lg" variant="secondary" className="px-6 md:px-8 py-3 text-base md:text-lg" onClick={() => window.location.href = user ? '/progress' : '/auth'}>
             {user ? 'View Progress' : 'Get Started Free'}
           </Button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12 px-4">
+      <footer className="bg-slate-900 text-white py-8 md:py-12 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
@@ -524,7 +596,7 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-400">
+          <div className="border-t border-slate-800 mt-6 md:mt-8 pt-6 md:pt-8 text-center text-slate-400">
             <p>© 2024 TrainMe. All rights reserved.</p>
           </div>
         </div>
