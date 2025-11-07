@@ -132,6 +132,7 @@ export default function QuizPage() {
       await addDoc(collection(db, 'quizAttempts'), {
         userId: user.uid,
         quizId: id,
+        quizTitle: quiz.title,
         pathId: pathId,
         score: finalScore,
         totalQuestions: (quiz.questions || []).length,
@@ -172,8 +173,7 @@ export default function QuizPage() {
         const xpGained = quiz.xpReward || 20;
         const userRef = doc(db, 'users', user.uid);
         await updateDoc(userRef, {
-          totalXp: increment(xpGained),
-          quizzesCompleted: increment(1)
+          totalXp: increment(xpGained)
         });
       }
     } catch (error) {
