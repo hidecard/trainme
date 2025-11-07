@@ -387,6 +387,19 @@ export default function AdminDashboard() {
     }
   };
 
+  // Learning Path management
+  const deleteLearningPath = async (id: string) => {
+    if (confirm('Are you sure you want to delete this learning path?')) {
+      try {
+        await deleteDoc(doc(db, 'learningPaths', id));
+        setRefreshKey(prev => prev + 1);
+      } catch (err) {
+        console.error('Error deleting learning path:', err);
+        setError('Failed to delete learning path');
+      }
+    }
+  };
+
   // Make user admin
   const makeAdmin = async (userId: string) => {
     if (confirm(`Make user ${userId} an admin?`)) {
@@ -427,16 +440,16 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex justify-between items-center">
+        <div className="mb-6 md:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Admin Dashboard</h1>
-            <p className="text-slate-600">Manage users, lessons, and quizzes</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Admin Dashboard</h1>
+            <p className="text-slate-600 text-sm md:text-base">Manage users, lessons, and quizzes</p>
           </div>
-          <Button onClick={() => setRefreshKey(prev => prev + 1)} variant="outline" size="sm">
+          <Button onClick={() => setRefreshKey(prev => prev + 1)} variant="outline" size="sm" className="flex-shrink-0">
             <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
         </div>
 
@@ -446,8 +459,8 @@ export default function AdminDashboard() {
           </Alert>
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 gap-1 md:gap-0">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users ({users.length})
@@ -1088,10 +1101,18 @@ export default function AdminDashboard() {
                           </TableCell>
                           <TableCell>
                             <div className="flex space-x-2">
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.push(`/admin/learning-paths/edit/${path.id}`)}
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => deleteLearningPath(path.id)}
+                              >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
@@ -1107,7 +1128,7 @@ export default function AdminDashboard() {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Users</CardTitle>

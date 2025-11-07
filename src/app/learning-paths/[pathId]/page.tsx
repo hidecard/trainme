@@ -74,6 +74,17 @@ export default function LearningPathDetailPage() {
     }
   }, [user, path]);
 
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user && path) {
+        fetchUserProgress();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user, path]);
+
   const fetchPathData = async () => {
     try {
       const pathDoc = await getDoc(doc(db, 'learningPaths', pathId as string));

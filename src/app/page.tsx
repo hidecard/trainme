@@ -70,6 +70,13 @@ export default function Home() {
     if (user) {
       fetchHomePageData();
     } else {
+      setStats({
+        totalUsers: 0,
+        totalQuizzes: 0,
+        totalLessons: 0
+      });
+      setCategories([]);
+      setLeaderboard([]);
       setLoading(false);
     }
   }, [user]);
@@ -77,7 +84,7 @@ export default function Home() {
   const fetchHomePageData = async () => {
     setLoading(true);
     try {
-      // Fetch real stats from Firebase
+      // Always fetch real stats from Firebase
       const usersSnapshot = await getDocs(collection(db, 'users'));
       const quizzesSnapshot = await getDocs(collection(db, 'quizzes'));
       const categoriesSnapshot = await getDocs(collection(db, 'categories'));
@@ -107,17 +114,30 @@ export default function Home() {
         ...doc.data()
       }));
       setLeaderboard(leaderboardData);
-
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching home page data:', error);
-      // Fallback to default stats
-      setStats({
-        totalUsers: 0,
-        totalQuizzes: 0,
-        totalLessons: 0
-      });
-      setCategories([]);
-      setLeaderboard([]);
+
+      // Check if it's a permission error
+      if (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions')) {
+        console.log('Firebase permissions denied - falling back to default stats for non-authenticated users');
+        // Fallback to default stats for non-authenticated users
+        setStats({
+          totalUsers: 0,
+          totalQuizzes: 0,
+          totalLessons: 0
+        });
+        setCategories([]);
+        setLeaderboard([]);
+      } else {
+        // For other errors, still show fallback
+        setStats({
+          totalUsers: 0,
+          totalQuizzes: 0,
+          totalLessons: 0
+        });
+        setCategories([]);
+        setLeaderboard([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -160,9 +180,6 @@ export default function Home() {
                   <Button variant="ghost" onClick={() => window.location.href = '/leaderboard'}>
                     Leaderboard
                   </Button>
-                  <Button variant="ghost" onClick={() => window.location.href = '/quiz-demo'}>
-                    Try Quiz
-                  </Button>
                   {user.isAdmin && (
                     <Button variant="ghost" onClick={() => window.location.href = '/admin'}>
                       Admin
@@ -186,9 +203,6 @@ export default function Home() {
                   </Button>
                   <Button variant="ghost" onClick={() => window.location.href = '/leaderboard'}>
                     Leaderboard
-                  </Button>
-                  <Button variant="ghost" onClick={() => window.location.href = '/quiz-demo'}>
-                    Try Quiz
                   </Button>
                 </>
               )}
@@ -224,9 +238,6 @@ export default function Home() {
                     <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/leaderboard'; setMobileMenuOpen(false); }}>
                       Leaderboard
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/quiz-demo'; setMobileMenuOpen(false); }}>
-                      Try Quiz
-                    </Button>
                     {user.isAdmin && (
                       <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/admin'; setMobileMenuOpen(false); }}>
                         Admin
@@ -251,9 +262,6 @@ export default function Home() {
                     <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/leaderboard'; setMobileMenuOpen(false); }}>
                       Leaderboard
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start" onClick={() => { window.location.href = '/quiz-demo'; setMobileMenuOpen(false); }}>
-                      Try Quiz
-                    </Button>
                   </>
                 )}
               </div>
@@ -263,7 +271,7 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-12 md:py-20 px-4">
+      <section className="relative overflow-hidden py-8 md:py-12 lg:py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center space-y-6 md:space-y-8">
             <div className="space-y-4">
@@ -282,9 +290,6 @@ export default function Home() {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
-              <Button size="lg" onClick={() => window.location.href = '/quiz-demo'} className="px-6 md:px-8 py-3 text-base md:text-lg">
-                Try Quiz Demo
-              </Button>
               <Button size="lg" variant="outline" onClick={() => window.location.href = '/progress'} className="px-6 md:px-8 py-3 text-base md:text-lg">
                 View Progress
               </Button>
@@ -303,34 +308,32 @@ export default function Home() {
             )}
 
             {/* Stats */}
-            {user && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 md:mt-12 max-w-4xl mx-auto px-4">
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-blue-600">
-                    {loading ? <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin mx-auto" /> : stats.totalUsers.toLocaleString()}
-                  </div>
-                  <div className="text-slate-600">Active Learners</div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mt-6 md:mt-8 lg:mt-12 max-w-4xl mx-auto px-4">
+              <div className="text-center">
+                <div className="text-2xl md:text-3xl font-bold text-blue-600">
+                  {loading ? <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin mx-auto" /> : stats.totalUsers.toLocaleString()}
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-green-600">
-                    {loading ? <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin mx-auto" /> : stats.totalQuizzes}
-                  </div>
-                  <div className="text-slate-600">Interactive Quizzes</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-purple-600">
-                    {loading ? <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin mx-auto" /> : stats.totalLessons}
-                  </div>
-                  <div className="text-slate-600">Quiz Attempts</div>
-                </div>
+                <div className="text-slate-600">Active Learners</div>
               </div>
-            )}
+              <div className="text-center">
+                <div className="text-2xl md:text-3xl font-bold text-green-600">
+                  {loading ? <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin mx-auto" /> : stats.totalQuizzes}
+                </div>
+                <div className="text-slate-600">Interactive Quizzes</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl md:text-3xl font-bold text-purple-600">
+                  {loading ? <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin mx-auto" /> : stats.totalLessons}
+                </div>
+                <div className="text-slate-600">Quiz Attempts</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-12 md:py-20 px-4 bg-white">
+      <section className="py-8 md:py-12 lg:py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
@@ -341,7 +344,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
@@ -371,7 +374,7 @@ export default function Home() {
       </section>
 
       {/* Learning Paths Section */}
-      <section className="py-12 md:py-20 px-4 bg-slate-50">
+      <section className="py-8 md:py-12 lg:py-20 px-4 bg-slate-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
@@ -388,7 +391,7 @@ export default function Home() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {loading ? (
               <div className="col-span-full flex justify-center py-8">
                 <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin" />
@@ -431,7 +434,7 @@ export default function Home() {
       </section>
 
       {/* Leaderboard Preview */}
-      <section className="py-12 md:py-20 px-4 bg-slate-50">
+      <section className="py-8 md:py-12 lg:py-20 px-4 bg-slate-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
@@ -462,7 +465,7 @@ export default function Home() {
                           {index + 1}
                         </div>
                         <div>
-                          <div className="font-semibold text-sm md:text-base">{user.displayName || user.email?.split('@')[0] || 'Anonymous'}</div>
+                          <div className="font-semibold text-sm md:text-base">{user.displayName || 'Anonymous'}</div>
                           <div className="text-xs md:text-sm text-slate-600">Level {user.level || 1} • {user.streak || 0} day streak</div>
                         </div>
                       </div>
@@ -489,7 +492,7 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section className="py-12 md:py-20 px-4 bg-white">
+      <section className="py-8 md:py-12 lg:py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
@@ -500,7 +503,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
             <div className="text-center space-y-4">
               <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
                 <Target className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
@@ -535,7 +538,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 md:py-20 px-4 bg-gradient-to-r from-blue-600 to-purple-600">
+      <section className="py-8 md:py-12 lg:py-20 px-4 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="max-w-4xl mx-auto text-center text-white">
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
             {user ? 'Continue Your Learning Journey!' : 'Ready to Start Your Learning Journey?'}
@@ -553,9 +556,9 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-8 md:py-12 px-4">
+      <footer className="bg-slate-900 text-white py-6 md:py-8 lg:py-12 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
@@ -596,7 +599,7 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="border-t border-slate-800 mt-6 md:mt-8 pt-6 md:pt-8 text-center text-slate-400">
+          <div className="border-t border-slate-800 mt-4 md:mt-6 lg:mt-8 pt-4 md:pt-6 lg:pt-8 text-center text-slate-400">
             <p>© 2024 TrainMe. All rights reserved.</p>
           </div>
         </div>

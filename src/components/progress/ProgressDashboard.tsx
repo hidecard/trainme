@@ -169,17 +169,17 @@ export default function ProgressDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
+        <div className="mb-6 md:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Your Progress</h1>
-            <p className="text-slate-600">Track your learning journey and achievements</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Your Progress</h1>
+            <p className="text-slate-600 text-sm md:text-base">Track your learning journey and achievements</p>
           </div>
-          <Button onClick={() => setRefreshKey(prev => prev + 1)} variant="outline" size="sm">
+          <Button onClick={() => setRefreshKey(prev => prev + 1)} variant="outline" size="sm" className="flex-shrink-0">
             <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
         </div>
 
@@ -190,7 +190,7 @@ export default function ProgressDashboard() {
         )}
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {/* Level Card */}
           <Card className="relative overflow-hidden">
             <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-bl-full opacity-10"></div>
@@ -250,7 +250,7 @@ export default function ProgressDashboard() {
               <div className="flex items-center justify-between">
                 <BookOpen className="w-6 h-6 text-green-600" />
                 <Badge variant="outline" className="text-xs">
-                  {Math.round(averageScore)}%
+                  {isNaN(averageScore) ? 0 : Math.round(averageScore)}%
                 </Badge>
               </div>
             </CardHeader>
@@ -260,7 +260,7 @@ export default function ProgressDashboard() {
                   <div className="text-2xl font-bold">{totalQuizzesTaken}</div>
                   <div className="text-sm text-slate-600">Quizzes Taken</div>
                 </div>
-                <Progress value={averageScore} className="h-2" />
+                <Progress value={isNaN(averageScore) ? 0 : averageScore} className="h-2" />
               </div>
             </CardContent>
           </Card>
@@ -291,18 +291,18 @@ export default function ProgressDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 mb-6 bg-slate-100 p-1 rounded-lg w-fit">
+        <div className="flex space-x-1 mb-4 md:mb-6 bg-slate-100 p-1 rounded-lg w-fit overflow-x-auto">
           <Button
             variant={selectedTab === 'overview' ? 'default' : 'ghost'}
             onClick={() => setSelectedTab('overview')}
-            className="px-4"
+            className="px-3 md:px-4 text-sm md:text-base flex-shrink-0"
           >
             Overview
           </Button>
           <Button
             variant={selectedTab === 'achievements' ? 'default' : 'ghost'}
             onClick={() => setSelectedTab('achievements')}
-            className="px-4"
+            className="px-3 md:px-4 text-sm md:text-base flex-shrink-0"
           >
             Achievements
           </Button>
@@ -310,7 +310,7 @@ export default function ProgressDashboard() {
 
         {/* Tab Content */}
         {selectedTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             {/* Recent Activity */}
             <Card>
               <CardHeader>
@@ -338,11 +338,11 @@ export default function ProgressDashboard() {
                         <div className="flex-1">
                           <div className="font-medium text-sm">Completed Quiz</div>
                           <div className="text-xs text-slate-600">
-                            Score: {Math.round((attempt.score / attempt.totalQuestions) * 100)}% • +{attempt.score * 10} XP
+                            Score: {attempt.score && attempt.totalQuestions ? Math.round((attempt.score / attempt.totalQuestions) * 100) : 0}% • +{(attempt.score || 0) * 10} XP
                           </div>
                         </div>
                         <div className="text-xs text-slate-500">
-                          {new Date(attempt.completedAt).toLocaleDateString()}
+                          {attempt.completedAt ? new Date(attempt.completedAt).toLocaleDateString() : 'Invalid Date'}
                         </div>
                       </div>
                     ))
@@ -362,7 +362,7 @@ export default function ProgressDashboard() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-green-600">{Math.round(averageScore)}%</div>
+                    <div className="text-3xl font-bold text-green-600">{isNaN(averageScore) ? 0 : Math.round(averageScore)}%</div>
                     <div className="text-sm text-slate-600">Average Score</div>
                   </div>
                   
@@ -373,7 +373,7 @@ export default function ProgressDashboard() {
                     </div>
                     <div className="text-center p-3 bg-slate-50 rounded-lg">
                       <div className="text-xl font-semibold text-green-600">
-                        {quizAttempts.filter(a => (a.score / a.totalQuestions) >= 0.7).length}
+                        {quizAttempts.filter(a => a.score && a.totalQuestions && (a.score / a.totalQuestions) >= 0.7).length}
                       </div>
                       <div className="text-xs text-slate-600">Passed</div>
                     </div>
@@ -384,7 +384,7 @@ export default function ProgressDashboard() {
                       <span className="text-slate-600">Performance</span>
                       <span className="font-medium">Good</span>
                     </div>
-                    <Progress value={averageScore} className="h-2" />
+                    <Progress value={isNaN(averageScore) ? 0 : averageScore} className="h-2" />
                   </div>
                 </div>
               </CardContent>
@@ -393,7 +393,7 @@ export default function ProgressDashboard() {
         )}
 
         {selectedTab === 'achievements' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {loading ? (
               <div className="col-span-full text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto" />
