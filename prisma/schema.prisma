@@ -1,0 +1,185 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String?
+  avatar      String?
+  totalXp     Int      @default(0)
+  level       Int      @default(1)
+  streak      Int      @default(0)
+  lastActive  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  userProgress UserProgress[]
+  quizAttempts QuizAttempt[]
+  achievements UserAchievement[]
+  
+  @@map("users")
+}
+
+model Category {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String?
+  icon        String?
+  color       String?
+  
+  lessons     Lesson[]
+  quizzes     Quiz[]
+  
+  @@map("categories")
+}
+
+model Lesson {
+  id          String @id @default(cuid())
+  title       String
+  content     String
+  description String?
+  order       Int
+  categoryId  String
+  isPublished Boolean @default(false)
+  
+  category    Category @relation(fields: [categoryId], references: [id])
+  userProgress UserProgress[]
+  
+  @@map("lessons")
+}
+
+model Quiz {
+  id          String @id @default(cuid())
+  title       String
+  description String?
+  categoryId  String
+  difficulty  Difficulty @default(BEGINNER)
+  timeLimit   Int? // in seconds
+  isPublished Boolean @default(false)
+  
+  category    Category @relation(fields: [categoryId], references: [id])
+  questions   Question[]
+  quizAttempts QuizAttempt[]
+  
+  @@map("quizzes")
+}
+
+model Question {
+  id          String      @id @default(cuid())
+  quizId      String
+  text        String
+  type        QuestionType @default(MULTIPLE_CHOICE)
+  order       Int
+  explanation String?
+  
+  quiz        Quiz @relation(fields: [quizId], references: [id])
+  options     Option[]
+  answers     Answer[]
+  
+  @@map("questions")
+}
+
+model Option {
+  id         String @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean @default(false)
+  
+  question   Question @relation(fields: [questionId], references: [id])
+  answers    Answer[]
+  
+  @@map("options")
+}
+
+model UserProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  
+  user        User @relation(fields: [userId], references: [id])
+  lesson      Lesson @relation(fields: [lessonId], references: [id])
+  
+  @@unique([userId, lessonId])
+  @@map("user_progress")
+}
+
+model QuizAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  quizId      String
+  score       Int
+  totalQuestions Int
+  timeSpent   Int // in seconds
+  completedAt DateTime @default(now())
+  
+  user        User @relation(fields: [userId], references: [id])
+  quiz        Quiz @relation(fields: [quizId], references: [id])
+  answers     Answer[]
+  
+  @@map("quiz_attempts")
+}
+
+model Answer {
+  id          String @id @default(cuid())
+  questionId  String
+  optionId    String
+  quizAttemptId String
+  
+  question    Question @relation(fields: [questionId], references: [id])
+  option      Option @relation(fields: [optionId], references: [id])
+  quizAttempt QuizAttempt @relation(fields: [quizAttemptId], references: [id])
+  
+  @@map("answers")
+}
+
+model Achievement {
+  id          String @id @default(cuid())
+  title       String
+  description String
+  icon        String
+  xpReward    Int
+  condition   String // JSON string describing the condition
+  
+  userAchievements UserAchievement[]
+  
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  
+  user          User @relation(fields: [userId], references: [id])
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  CODE_SNIPPET
+}
