@@ -123,7 +123,8 @@ export default function QuizPage() {
       }
     });
 
-    const finalScore = Math.round((correctAnswers / (quiz.questions || []).length) * 100);
+    const totalQuestions = (quiz.questions || []).length;
+    const finalScore = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
     setScore(finalScore);
     setShowResults(true);
 
@@ -135,7 +136,7 @@ export default function QuizPage() {
         quizTitle: quiz.title,
         pathId: pathId,
         score: finalScore,
-        totalQuestions: (quiz.questions || []).length,
+        totalQuestions: totalQuestions,
         answers: selectedAnswers,
         completedAt: new Date(),
         timeSpent: quiz.timeLimit ? (quiz.timeLimit * 60) - (timeLeft || 0) : null

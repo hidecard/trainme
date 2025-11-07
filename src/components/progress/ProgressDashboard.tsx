@@ -97,14 +97,17 @@ export default function ProgressDashboard() {
       // Fetch recent quiz attempts
       const attemptsQuery = query(
         collection(db, 'quizAttempts'),
-        where('userId', '==', user.uid),
-        limit(10)
+        where('userId', '==', user.uid)
       );
       const attemptsSnapshot = await getDocs(attemptsQuery);
-      const attemptsData = attemptsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as QuizAttempt));
+      const attemptsData = attemptsSnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          completedAt: doc.data().completedAt?.toDate ? doc.data().completedAt.toDate().toISOString() : doc.data().completedAt
+        } as QuizAttempt))
+        .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
+        .slice(0, 10);
       setQuizAttempts(attemptsData);
 
     } catch (error) {
@@ -151,8 +154,8 @@ export default function ProgressDashboard() {
 
   // Calculate additional stats
   const totalQuizzesTaken = quizAttempts.length;
-  const averageScore = totalQuizzesTaken > 0 
-    ? quizAttempts.reduce((sum, attempt) => sum + (attempt.score / attempt.totalQuestions) * 100, 0) / totalQuizzesTaken
+  const averageScore = totalQuizzesTaken > 0
+    ? quizAttempts.reduce((sum, attempt) => sum + (attempt.score !== undefined && attempt.totalQuestions ? (attempt.score / attempt.totalQuestions) * 100 : 0), 0) / totalQuizzesTaken
     : 0;
   const totalStudyTime = quizAttempts.reduce((sum, attempt) => sum + (attempt.timeSpent || 0), 0);
 
@@ -225,19 +228,19 @@ export default function ProgressDashboard() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <Flame className="w-6 h-6 text-orange-600" />
-                <Badge className={`text-xs ${getStreakColor(user.streak)}`}>
-                  {user.streak} days
+                <Badge className={`text-xs ${getStreakColor(user.streak || 0)}`}>
+                  {(user.streak || 0)} days
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <div className="text-2xl font-bold">{user.streak}</div>
+                  <div className="text-2xl font-bold">{user.streak || 0}</div>
                   <div className="text-sm text-slate-600">Day Streak</div>
                 </div>
                 <div className="text-xs text-slate-600">
-                  Keep it up! Come back tomorrow to maintain your streak.
+                  {(user.streak || 0) > 0 ? 'Keep it up! Come back tomorrow to maintain your streak.' : 'Start your streak today!'}
                 </div>
               </div>
             </CardContent>
@@ -320,33 +323,35 @@ export default function ProgressDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {loading ? (
-                    <div className="text-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-                    </div>
-                  ) : quizAttempts.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">
-                      <p>No quiz attempts yet. Start learning to see your progress here!</p>
-                    </div>
-                  ) : (
-                    quizAttempts.slice(0, 5).map((attempt, index) => (
-                      <div key={attempt.id} className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <Trophy className="w-4 h-4 text-green-600" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">Completed Quiz</div>
-                          <div className="text-xs text-slate-600">
-                            Score: {attempt.score !== undefined && attempt.totalQuestions ? Math.round((attempt.score / attempt.totalQuestions) * 100) : 0}% • +{(attempt.score || 0) * 10} XP
+                <div className="max-h-96 overflow-y-auto">
+                  <div className="space-y-4">
+                    {loading ? (
+                      <div className="text-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                      </div>
+                    ) : quizAttempts.length === 0 ? (
+                      <div className="text-center py-8 text-slate-500">
+                        <p>No quiz attempts yet. Start learning to see your progress here!</p>
+                      </div>
+                    ) : (
+                      quizAttempts.map((attempt, index) => (
+                        <div key={attempt.id} className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <Trophy className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">Completed Quiz</div>
+                            <div className="text-xs text-slate-600">
+                              Score: {attempt.score !== undefined && attempt.totalQuestions ? Math.round((attempt.score / attempt.totalQuestions) * 100) : 0}% • +{(attempt.score || 0) * 10} XP
+                            </div>
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {attempt.completedAt ? new Date(attempt.completedAt).toLocaleDateString() : new Date().toLocaleDateString()}
                           </div>
                         </div>
-                        <div className="text-xs text-slate-500">
-                          {attempt.completedAt ? new Date(attempt.completedAt).toLocaleDateString() : new Date().toLocaleDateString()}
-                        </div>
-                      </div>
-                    ))
-                  )}
+                      ))
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -66,16 +66,17 @@ export default function ProfilePage() {
       // Fetch recent quiz attempts
       const attemptsQuery = query(
         collection(db, 'quizAttempts'),
-        where('userId', '==', user.uid),
-        orderBy('completedAt', 'desc'),
-        limit(10)
+        where('userId', '==', user.uid)
       );
       const attemptsSnapshot = await getDocs(attemptsQuery);
-      const attemptsData = attemptsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        completedAt: doc.data().completedAt?.toDate() || new Date()
-      })) as QuizAttempt[];
+      const attemptsData = attemptsSnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          completedAt: doc.data().completedAt?.toDate ? doc.data().completedAt.toDate() : new Date(doc.data().completedAt || Date.now())
+        } as QuizAttempt))
+        .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
+        .slice(0, 10);
 
       // Calculate quizzes completed from attempts
       const quizzesCompleted = attemptsData.length;
@@ -296,46 +297,48 @@ export default function ProfilePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {loading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-2 text-gray-600">Loading activity...</p>
-                  </div>
-                ) : quizAttempts.length > 0 ? (
-                  <div className="space-y-4">
-                    {quizAttempts.map((attempt) => (
-                      <div key={attempt.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-4">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            attempt.score >= 80 ? 'bg-green-100 text-green-800' :
-                            attempt.score >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            <Trophy className="w-5 h-5" />
+                <div className="max-h-96 overflow-y-auto">
+                  {loading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                      <p className="mt-2 text-gray-600">Loading activity...</p>
+                    </div>
+                  ) : quizAttempts.length > 0 ? (
+                    <div className="space-y-4">
+                      {quizAttempts.map((attempt) => (
+                        <div key={attempt.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex items-center space-x-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                              attempt.score >= 80 ? 'bg-green-100 text-green-800' :
+                              attempt.score >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              <Trophy className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium">{attempt.quizTitle || 'Quiz'}</h4>
+                              <p className="text-sm text-gray-600">
+                                {attempt.completedAt.toLocaleDateString()} • {attempt.xpEarned || 0} XP earned
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-medium">{attempt.quizTitle || 'Quiz'}</h4>
-                            <p className="text-sm text-gray-600">
-                              {attempt.completedAt.toLocaleDateString()} • {attempt.xpEarned || 0} XP earned
-                            </p>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold">{attempt.score}%</div>
+                            <Badge variant={attempt.score >= 70 ? 'default' : 'secondary'}>
+                              {attempt.score >= 70 ? 'Passed' : 'Try Again'}
+                            </Badge>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold">{attempt.score}%</div>
-                          <Badge variant={attempt.score >= 70 ? 'default' : 'secondary'}>
-                            {attempt.score >= 70 ? 'Passed' : 'Try Again'}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No quiz attempts yet</p>
-                    <p className="text-sm">Complete your first quiz to see your activity here!</p>
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No quiz attempts yet</p>
+                      <p className="text-sm">Complete your first quiz to see your activity here!</p>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
