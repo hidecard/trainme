@@ -18,7 +18,8 @@ import {
   getDocs,
   updateDoc,
   increment,
-  addDoc
+  addDoc,
+  setDoc
 } from 'firebase/firestore';
 
 export default function LessonPage() {
@@ -98,6 +99,33 @@ export default function LessonPage() {
           completedAt: new Date(),
           startedAt: new Date()
         });
+      }
+
+      // Update learning path progress if pathId is provided
+      if (pathId) {
+        const pathProgressRef = doc(db, 'userProgress', `${user.uid}_${pathId}`);
+        const pathProgressDoc = await getDoc(pathProgressRef);
+
+        if (pathProgressDoc.exists()) {
+          const currentProgress = pathProgressDoc.data();
+          const completedLessons = currentProgress.completedLessons || [];
+          if (!completedLessons.includes(id as string)) {
+            await updateDoc(pathProgressRef, {
+              completedLessons: [...completedLessons, id as string],
+              lastActivity: new Date().toISOString()
+            });
+          }
+        } else {
+          // Create new path progress if it doesn't exist
+          await setDoc(pathProgressRef, {
+            pathId: pathId,
+            completedLessons: [id as string],
+            completedQuizzes: [],
+            totalXp: 0,
+            startedAt: new Date().toISOString(),
+            lastActivity: new Date().toISOString()
+          });
+        }
       }
 
       // Update user XP and level

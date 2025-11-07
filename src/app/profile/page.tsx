@@ -103,18 +103,50 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Please sign in to view your profile</h1>
-          <Button onClick={() => window.location.href = '/auth'}>
-            Sign In
-          </Button>
+      <div className="min-h-screen bg-gray-50">
+        {/* Navigation */}
+        <nav className="border-b bg-white sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="font-bold text-xl">TrainMe</span>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <Button variant="ghost" onClick={() => window.location.href = '/learning-paths'}>
+                  Learning Paths
+                </Button>
+                <Button variant="ghost" onClick={() => window.location.href = '/progress'}>
+                  Progress
+                </Button>
+                <Button variant="ghost" onClick={() => window.location.href = '/leaderboard'}>
+                  Leaderboard
+                </Button>
+                <Button variant="ghost" onClick={() => window.location.href = '/auth'}>
+                  Sign In
+                </Button>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Please sign in to view your profile</h1>
+            <Button onClick={() => window.location.href = '/auth'}>
+              Sign In
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
-  const levelInfo = userStats ? getLevelProgress(userStats.totalXp) : { currentLevel: 1, progress: 0, xpForNextLevel: 100 };
+  const levelInfo = user && userStats ? getLevelProgress(userStats.totalXp) : { currentLevel: 1, progress: 0, xpForNextLevel: 100 };
 
   return (
     <div className="min-h-screen bg-gray-50">

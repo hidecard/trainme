@@ -20,7 +20,8 @@ import {
   getDocs,
   addDoc,
   updateDoc,
-  increment
+  increment,
+  setDoc
 } from 'firebase/firestore';
 
 interface Question {
@@ -133,10 +134,38 @@ export default function QuizPage() {
         quizId: id,
         pathId: pathId,
         score: finalScore,
+        totalQuestions: (quiz.questions || []).length,
         answers: selectedAnswers,
         completedAt: new Date(),
         timeSpent: quiz.timeLimit ? (quiz.timeLimit * 60) - (timeLeft || 0) : null
       });
+
+      // Update learning path progress if pathId is provided
+      if (pathId) {
+        const pathProgressRef = doc(db, 'userProgress', `${user.uid}_${pathId}`);
+        const pathProgressDoc = await getDoc(pathProgressRef);
+
+        if (pathProgressDoc.exists()) {
+          const currentProgress = pathProgressDoc.data();
+          const completedQuizzes = currentProgress.completedQuizzes || [];
+          if (!completedQuizzes.includes(id as string)) {
+            await updateDoc(pathProgressRef, {
+              completedQuizzes: [...completedQuizzes, id as string],
+              lastActivity: new Date().toISOString()
+            });
+          }
+        } else {
+          // Create new path progress if it doesn't exist
+          await setDoc(pathProgressRef, {
+            pathId: pathId,
+            completedLessons: [],
+            completedQuizzes: [id as string],
+            totalXp: 0,
+            startedAt: new Date().toISOString(),
+            lastActivity: new Date().toISOString()
+          });
+        }
+      }
 
       // Update user XP if score is good enough
       if (finalScore >= 70) {

@@ -5,7 +5,7 @@ import { getFirestore, collection, doc, setDoc, addDoc, serverTimestamp, getDocs
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDA065XG19Wf6rp1eW5UOdBl4YCpnfMegc",
-  authDomain: "messager-4abd8.firebaseapp.com",
+  authDomain: process.env.NODE_ENV === 'production' ? "trainme-dev.vercel.app" : "localhost",
   databaseURL: "https://messager-4abd8.firebaseio.com",
   projectId: "messager-4abd8",
   storageBucket: "messager-4abd8.appspot.com",
