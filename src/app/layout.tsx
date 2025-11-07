@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   keywords: ["TrainMe", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "interactive learning", "quiz platform", "web development"],
   authors: [{ name: "TrainMe Team" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/favicon.ico",
   },
   openGraph: {
     title: "TrainMe - Interactive Learning Platform",
