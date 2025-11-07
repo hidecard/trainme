@@ -25,7 +25,8 @@ export default function Home() {
     totalQuizzes: 0,
     totalLessons: 0
   });
-  const [categories, setCategories] = useState<any[]>([]);
+  const [learningPaths, setLearningPaths] = useState<any[]>([]);
+  const [userProgress, setUserProgress] = useState<Record<string, any>>({});
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -57,6 +58,33 @@ export default function Home() {
     }
   ];
 
+  const calculateProgress = (path: any, progress: any) => {
+    const totalLessons = path.lessons?.length || 0;
+    const totalQuizzes = path.quizzes?.length || 0;
+    const totalItems = totalLessons + totalQuizzes;
+
+    if (totalItems === 0) return 0;
+
+    const completedLessons = progress.completedLessons?.length || 0;
+    const completedQuizzes = progress.completedQuizzes?.length || 0;
+    const completedItems = completedLessons + completedQuizzes;
+
+    return (completedItems / totalItems) * 100;
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty?.toLowerCase()) {
+      case 'beginner':
+        return 'bg-green-100 text-green-800';
+      case 'intermediate':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'advanced':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-blue-100 text-blue-800';
+    }
+  };
+
   // Categories will be loaded from Firebase
 
   useEffect(() => {
@@ -76,7 +104,7 @@ export default function Home() {
       // Always fetch real stats from Firebase
       const usersSnapshot = await getDocs(collection(db, 'users'));
       const quizzesSnapshot = await getDocs(collection(db, 'quizzes'));
-      const categoriesSnapshot = await getDocs(collection(db, 'categories'));
+      const learningPathsSnapshot = await getDocs(collection(db, 'learningPaths'));
 
       // Calculate quiz attempts
       const attemptsSnapshot = await getDocs(collection(db, 'quizAttempts'));
@@ -88,12 +116,32 @@ export default function Home() {
         totalLessons: totalQuizAttempts // Using attempts as lessons for now
       });
 
-      // Set categories from Firebase
-      const categoriesData = categoriesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setCategories(categoriesData);
+      // Set learning paths from Firebase
+      const learningPathsData = learningPathsSnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(path => path.isActive);
+      setLearningPaths(learningPathsData);
+
+      // Fetch user progress if logged in
+      if (user) {
+        const progressPromises = learningPathsData.map(async (path) => {
+          const progressDoc = await getDoc(doc(db, 'userProgress', `${user.uid}_${path.id}`));
+          if (progressDoc.exists()) {
+            return { pathId: path.id, ...progressDoc.data() };
+          }
+          return null;
+        });
+
+        const progressData = await Promise.all(progressPromises);
+        const progressMap = progressData.reduce((acc, progress) => {
+          if (progress) {
+            acc[progress.pathId] = progress;
+          }
+          return acc;
+        }, {} as Record<string, any>);
+
+        setUserProgress(progressMap);
+      }
 
       // Fetch top 5 users for leaderboard preview
       const usersQuery = query(collection(db, 'users'), orderBy('totalXp', 'desc'), limit(5));
@@ -115,7 +163,8 @@ export default function Home() {
           totalQuizzes: 0,
           totalLessons: 0
         });
-        setCategories([]);
+        setLearningPaths([]);
+        setUserProgress({});
         setLeaderboard([]);
       } else {
         // For other errors, still show fallback
@@ -124,7 +173,8 @@ export default function Home() {
           totalQuizzes: 0,
           totalLessons: 0
         });
-        setCategories([]);
+        setLearningPaths([]);
+        setUserProgress({});
         setLeaderboard([]);
       }
     } finally {
@@ -385,33 +435,38 @@ export default function Home() {
               <div className="col-span-full flex justify-center py-8">
                 <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin" />
               </div>
-            ) : categories.length > 0 ? (
-              categories.slice(0, 4).map((category, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/learning-paths'}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl md:text-3xl">{category.icon || '📚'}</div>
-                      <Badge className={category.color || 'bg-blue-100 text-blue-800'}>
-                        {category.name || 'Category'}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-base md:text-lg">{category.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-600">Progress</span>
-                        <span className="font-medium">0%</span>
+            ) : learningPaths.length > 0 ? (
+              learningPaths.slice(0, 4).map((path, index) => {
+                const progress = userProgress[path.id];
+                const progressValue = progress ? calculateProgress(path, progress) : 0;
+
+                return (
+                  <Card key={index} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/learning-paths'}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="text-2xl md:text-3xl">{path.icon || '📚'}</div>
+                        <Badge className={getDifficultyColor(path.difficulty)}>
+                          {path.difficulty}
+                        </Badge>
                       </div>
-                      <Progress value={0} className="h-2" />
-                      <div className="flex justify-between text-sm text-slate-600">
-                        <span>{category.description || 'Learn the fundamentals'}</span>
-                        <span>~15 min</span>
+                      <CardTitle className="text-base md:text-lg">{path.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">Progress</span>
+                          <span className="font-medium">{Math.round(progressValue)}%</span>
+                        </div>
+                        <Progress value={progressValue} className="h-2" />
+                        <div className="flex justify-between text-sm text-slate-600">
+                          <span>{path.description}</span>
+                          <span>~{path.estimatedTime} min</span>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                    </CardContent>
+                  </Card>
+                );
+              })
             ) : (
               <div className="col-span-full text-center py-8 text-slate-500">
                 <p>No learning paths available yet.</p>
