@@ -162,6 +162,9 @@ export default function QuizInterface({ quiz, onComplete }: QuizInterfaceProps) 
                 {percentage}% Correct
               </div>
               <div className="text-lg font-medium text-slate-700">
+                XP Earned: +{score * 10}
+              </div>
+              <div className="text-lg font-medium text-slate-700">
                 {getScoreMessage(score)}
               </div>
             </div>

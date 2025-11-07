@@ -14,7 +14,9 @@ import {
   query,
   orderBy,
   limit,
-  where
+  where,
+  doc,
+  getDoc
 } from 'firebase/firestore';
 
 export default function Home() {
@@ -119,7 +121,7 @@ export default function Home() {
       // Set learning paths from Firebase
       const learningPathsData = learningPathsSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(path => path.isActive);
+        .filter(path => (path as any).isActive);
       setLearningPaths(learningPathsData);
 
       // Fetch user progress if logged in
