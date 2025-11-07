@@ -20,6 +20,15 @@ const nextConfig: NextConfig = {
     // 构建时忽略ESLint错误
     ignoreDuringBuilds: true,
   },
+  // Add Firebase auth iframe handling
+  async rewrites() {
+    return [
+      {
+        source: '/__/auth/:path*',
+        destination: 'https://messager-4abd8.firebaseapp.com/__/auth/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
