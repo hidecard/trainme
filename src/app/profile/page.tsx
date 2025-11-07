@@ -72,11 +72,28 @@ export default function ProfilePage() {
       );
       const attemptsSnapshot = await getDocs(attemptsQuery);
       const attemptsData = attemptsSnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          completedAt: doc.data().completedAt?.toDate ? doc.data().completedAt.toDate() : new Date(doc.data().completedAt || Date.now())
-        } as QuizAttempt))
+        .map(doc => {
+          const data = doc.data();
+          let completedAt = data.completedAt;
+
+          // Handle Firestore Timestamp
+          if (data.completedAt?.toDate) {
+            completedAt = data.completedAt.toDate().toISOString();
+          } else if (data.completedAt && typeof data.completedAt === 'string') {
+            completedAt = data.completedAt;
+          } else if (data.completedAt && typeof data.completedAt === 'object') {
+            // Handle other timestamp formats
+            completedAt = new Date(data.completedAt).toISOString();
+          } else {
+            completedAt = new Date().toISOString();
+          }
+
+          return {
+            id: doc.id,
+            ...data,
+            completedAt
+          } as QuizAttempt;
+        })
         .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
         .slice(0, 10);
 

@@ -103,11 +103,28 @@ export default function ProgressDashboard() {
       );
       const attemptsSnapshot = await getDocs(attemptsQuery);
       const attemptsData = attemptsSnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          completedAt: doc.data().completedAt?.toDate ? doc.data().completedAt.toDate().toISOString() : doc.data().completedAt
-        } as QuizAttempt))
+        .map(doc => {
+          const data = doc.data();
+          let completedAt = data.completedAt;
+
+          // Handle Firestore Timestamp
+          if (data.completedAt?.toDate) {
+            completedAt = data.completedAt.toDate().toISOString();
+          } else if (data.completedAt && typeof data.completedAt === 'string') {
+            completedAt = data.completedAt;
+          } else if (data.completedAt && typeof data.completedAt === 'object') {
+            // Handle other timestamp formats
+            completedAt = new Date(data.completedAt).toISOString();
+          } else {
+            completedAt = new Date().toISOString();
+          }
+
+          return {
+            id: doc.id,
+            ...data,
+            completedAt
+          } as QuizAttempt;
+        })
         .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
         .slice(0, 10);
       setQuizAttempts(attemptsData);
@@ -157,7 +174,7 @@ export default function ProgressDashboard() {
   // Calculate additional stats
   const totalQuizzesTaken = quizAttempts.length;
   const averageScore = totalQuizzesTaken > 0
-    ? quizAttempts.reduce((sum, attempt) => sum + (attempt.score !== undefined && attempt.totalQuestions ? (attempt.score / attempt.totalQuestions) * 100 : 0), 0) / totalQuizzesTaken
+    ? quizAttempts.reduce((sum, attempt) => sum + (attempt.score !== undefined && attempt.totalQuestions ? attempt.score : 0), 0) / totalQuizzesTaken
     : 0;
   const totalStudyTime = quizAttempts.reduce((sum, attempt) => sum + (attempt.timeSpent || 0), 0);
 
@@ -344,7 +361,7 @@ export default function ProgressDashboard() {
                           <div className="flex-1">
                             <div className="font-medium text-sm">Completed Quiz</div>
                             <div className="text-xs text-slate-600">
-                              Score: {attempt.score !== undefined && attempt.totalQuestions ? Math.round((attempt.score / attempt.totalQuestions) * 100) : 0}% • +{(attempt.score || 0) * 10} XP
+                              Score: {attempt.score !== undefined && attempt.totalQuestions ? attempt.score : 0}% • +{(attempt.score || 0) * 10} XP
                             </div>
                           </div>
                           <div className="text-xs text-slate-500">
@@ -380,7 +397,7 @@ export default function ProgressDashboard() {
                     </div>
                     <div className="text-center p-3 bg-slate-50 rounded-lg">
                       <div className="text-xl font-semibold text-green-600">
-                        {quizAttempts.filter(a => a.score && a.totalQuestions && (a.score / a.totalQuestions) >= 0.7).length}
+                        {quizAttempts.filter(a => a.score && a.score >= 70).length}
                       </div>
                       <div className="text-xs text-slate-600">Passed</div>
                     </div>
